@@ -2,6 +2,10 @@
 
 本文旨在介绍如何使用 Rust SDK([alloy-rs](https://github.com/alloy-rs/alloy)) 与链上合约进行交互，进而开发 DApp。
 
+参考文档：https://alloy.rs/examples/advanced/README
+
+更多demo: https://github.com/alloy-rs/examples/tree/main/examples
+
 ## 1. 配置`.env`文件
 
 在`.env`文件中添加必要的配置，包括且不限于：
@@ -11,7 +15,7 @@
 
 ## 2. 编写 Rust 代码
 
-在 Rust 项目中，我们可以通过如下代码（`main.rs`)`与合约进行交互：
+在 Rust 项目中，我们可以通过如下代码（`main.rs`)与合约进行交互：
 
 1. 导入必要的依赖
 
@@ -83,3 +87,21 @@
    assert_eq!(receipt.status(), true);
    info!("Transfer successful");
    ```
+
+8. 启动本地节点
+
+```shell
+   anvil
+```
+
+9. 运行项目
+
+```rust
+cargo run --bin alloy-rust
+cargo run --bin main
+```
+
+## 3. Build a fast MEV bot with Alloy's Primitive Types
+
+todo
+https://alloy.rs/guides/speed-up-using-u256

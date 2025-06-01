@@ -61,187 +61,9 @@ TheGraph defines that how to create data index, which is called Subgraph, includ
 
    Note: latest Graph CLI only support to deploy mainnet and goerli. If you want to use it on the others networks, you need to login by Github account, then create and deploy it on Hosted Service.
 
-5. Develop and deploy subgraph
-
-   use yarn to install Graph CLI globally
-
-   ```bash
-   yarn global add @graphprotocol/graph-cli
-   ```
-
-6. Initialize configuration:
-
-   ```bash
-   graph init --studio <SUBGRAPH_NAME>
-   ```
-
-   If using Hosted Service, the initializing command is as follows:
-
-   ```bash
-   graph init --product hosted-service <GITHUB_USER>/<SUBGRAPH NAME>
-   ```
-   - Protocol Select Ethereum
-   - choose "Subgraph name" and "Direction to create the subgraph", then enter it.
-   - choose sepolia in Ethereum network
-   - input your contract address generated when the contract was deployed in Step 3 in "Contract address"
-   - When it came to "fetch ABI from Etherscan", it will fail, then show "ABI file (path)" which prompt that input the path of abi, we should input the path of SimpleToken.json(`./abis/SimpleToken.json`)
-   . If task 07-hardhat has been successfully executed and ethyscan has been configured in hardhat.config.js, the execution here will pass through
-   -After the "fetch Start Block" execution fails, enter n for retry, "Start Block", and "Contract Name" default to carriage return. "Add another contract?" Enter n
-   - If yarn install fails (network error), you can enter in the new directory and install npm dependencies manually.
-
-7. Modify the mode of defining
-
-   - modifying template in `./scripts/schema.graphql` and `./scripts/mapping.ts`
-
-   - `<SUBGRAPH_NAME>/schema.graphql` the modified content as follows:
-
-     ```graphql
-     type TransferEntity @entity {
-       id: ID!
-       from: Bytes! # address
-       to: Bytes! # address
-       value: BigInt!
-     }
-
-     type ApprovalEntity @entity {
-       id: ID!
-       owner: Bytes! # address
-       spender: Bytes! # address
-       value: BigInt!
-     }
-     ```
-
-   - `<SUBGRAPH_NAME>/src/mapping.ts` the modified content as follows:
-
-     ```ts
-     import { BigInt } from '@graphprotocol/graph-ts';
-     import { SimpleToken, Transfer, Approval } from '../generated/SimpleToken/SimpleToken';
-     import { TransferEntity, ApprovalEntity } from '../generated/schema';
-
-     export function handleTransfer(event: Transfer): void {
-       // Entities can be loaded from the store using a string ID; this ID
-       // needs to be unique across all entities of the same type
-       let entity = TransferEntity.load(event.transaction.from.toHex());
-
-       // Entities only exist after they have been saved to the store;
-       // `null` checks allow to create entities on demand
-       if (entity == null) {
-         entity = new TransferEntity(event.transaction.from.toHex());
-       }
-
-       // BigInt and BigDecimal math are supported
-       entity.value = event.params.value;
-
-       // Entity fields can be set based on event parameters
-       entity.from = event.params.from;
-       entity.to = event.params.to;
-
-       // Entities can be written to the store with `.save()`
-       entity.save();
-
-       // Note: If a handler doesn't require existing field values, it is faster
-       // _not_ to load the entity from the store. Instead, create it fresh with
-       // `new Entity(...)`, set the fields that should be updated and save the
-       // entity back to the store. Fields that were not set or unset remain
-       // unchanged, allowing for partial updates to be applied.
-
-       // It is also possible to access smart contracts from mappings. For
-       // example, the contract that has emitted the event can be connected to
-       // with:
-       //
-       // let contract = Contract.bind(event.address)
-       //
-       // The following functions can then be called on this contract to access
-       // state variables and other data:
-       //
-       // - contract.approve(...)
-       // - contract.totalSupply(...)
-       // - contract.transferFrom(...)
-       // - contract.increaseAllowance(...)
-       // - contract.balanceOf(...)
-       // - contract.decreaseAllowance(...)
-       // - contract.transfer(...)
-       // - contract.allowance(...)
-     }
-
-     export function handleApproval(event: Approval): void {
-       // Entities can be loaded from the store using a string ID; this ID
-       // needs to be unique across all entities of the same type
-       let entity = ApprovalEntity.load(event.transaction.from.toHex());
-
-       // Entities only exist after they have been saved to the store;
-       // `null` checks allow to create entities on demand
-       if (entity == null) {
-         entity = new ApprovalEntity(event.transaction.from.toHex());
-       }
-
-       // BigInt and BigDecimal math are supported
-       entity.value = event.params.value;
-
-       // Entity fields can be set based on event parameters
-       entity.owner = event.params.owner;
-       entity.spender = event.params.spender;
-
-       // Entities can be written to the store with `.save()`
-       entity.save();
-     }
-     ```
-
-8. Modify the name of entity
-
-   - enter graphtest directory
-   - modify entities in subgraph.yaml:
-
-   ```yaml
-   ---
-   entities:
-     - TransferEntity
-     - ApprovalEntity
-   ```
-
-9. Authorize and deploy Subgraph
-
-   Get your `<DEPLOY KEY>` first, find it in your home page of subgraph:
-   <center><img src="https://github.com/Dapp-Learning-DAO/Dapp-Learning-Arsenal/blob/main/images/basic/08-hardhat-graph/auth_deploy_key.png?raw=true" /></center>
-
-   - Authorize
-
-     ```bash
-     graph auth --studio <DEPLOY KEY>
-     ```
-
-     If use Hosted Service, the initing command is as follows:
-
-     ```bash
-     graph auth --product hosted-service <ACCESS_TOKEN>
-     ```
-
-   - enter the directory of subgraph
-
-     ```bash
-     cd ./<SUBGRAPH_NAME>
-     ```
-
-   - BUILD SUBGRAPH
-
-     ```bash
-     graph codegen && graph build
-     ```
-
-   - DEPLOY SUBGRAPH
-
-     ```bash
-     graph deploy --studio <SUBGRAPH_NAME>
-     ```
-
-     If use Hosted Service, the initing command is as follows:
-
-     ```bash
-     graph deploy --product hosted-service <GITHUB_USER>/<SUBGRAPH NAME>
-     ```
-
-     - You have to input `Version Label`, such as `0.0.1`, or it will give an error prompt `You must provide a version label.`
-
+5. Develop and deploy subgraph   
+   Refer to [subgraphs-quick-start](https://thegraph.com/docs/en/subgraphs/quick-start/) to initialize and deploy a subgraph project. It's important to note that when initializing the Subgraph project, you need to select a real blockchain network (such as Optimism) and input a real Contract address.  
+   
 ## Check if subgraph deploy
 
 Enter your home page of subgraph from subgraph panel, check index progress, it could be called when the progress is finished.
@@ -390,6 +212,69 @@ subgraph provide the data, data sources and the mode of querying with GraphQL AP
    AssemblyScripts mappings allows you to use the type of entities defined in schema to store indexed data. Graph CLI also uses the combination of schema and ABI of smart contract to generate the type of AssemblyScript
 4. establish relationship with @derivedFrom
    Define reverse queries on entities with the @derivedfrom field to create a virtual field in entities which coule be queried. But you can not configure it manually by mapping API. Actually, it is grew from the relationship defined on another entity. The relation do not make sence to the relation of store, if you only store one and grow another, the performance of indexing and querying will be better.
+
+## Thegraph's equivalent  
+In addition to Thegraph, there are other similar products, so that we can choose the best products according to product characteristics, costs, etc.
+
+### Alchemy  
+Alchemy also provides Subgraph functionality, users can easily migrate Subgraph from Thegraph to Alchemy.
+
+- Deploy    
+The deployment process is the same as that of the thegraph host service. codegen and build are performed after the ts code is written. At last, you need to enter the deploy-key parameter when deploying is performed
+
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/Alchemy_Subgraph.jpg?raw=true" /></center>
+
+Reference: https://docs.alchemy.com/reference/subgraphs-quickstart   
+
+
+2. Alchemy Subgraph Pricing  
+By default, Free Plan is used, which is sufficient for developers to use themselves, and when used for projects, Plan needs to be upgraded to unlock the number of queries  
+
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/Alchemy_Pricing.jpg?raw=true" /></center>        
+
+
+3. Thegraph Pricing    
+The Growth Plan is $49 a month, with 1,000,000 query times, averaging $0.000049/ time, while thegraph queries 1,000,000 times, requiring about 186 GRT. If GRT is calculated according to $0.2, thegraph average $0.000037/ time  
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/Thegraph_Pricing.jpg?raw=true" /></center>
+
+Reference：https://www.alchemy.com/pricing
+
+
+### Envio  
+1. Build locally  
+Initialize the project directory with 'envio init' and then start the local Indexer with 'envio dev'. Envio local indexer start soon, start after can through [http://localhost:8080/] (http://localhost:8080/console) for a visit   
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/envio_start.jpg?raw=true" /></center>   
+
+
+2. Host Service Mode
+Upload the project initialized with envio init to github, then envio will assign access to the repo, and after committing, envio will automatically deploy    
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/envio_init.jpg?raw=true" /></center>  
+
+3. Deploy Successfully
+Once the deployment is successful, you can view the access in envio's Host Service    
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/envio_dashboard.jpg?raw=true" /></center>  
+
+Reference：https://docs.envio.dev/docs/HyperIndex/hosted-service-deployment
+
+
+#### Envio Advantages   
+- Local builds are fast  
+- The Host Service is currently free to use 
+
+### Ponder  
+1. Local build  
+Ponder can also be built locally, but he needs to use Ethereum RPC to get data to nodes, similar to Alchemy's subgraph, which is limited by the frequency of Ethereum RPC nodes. The official website recommends using Alchemy's RPC, but as described above, Alchemy's RPC has access restrictions  
+<center><img src="https://github.com/Dapp-Learning-DAO/Imgs-for-tasks/blob/main/basic%20task/ponder_build.jpg?raw=true" /></center> 
+
+2. Host Service construction 
+At present ponder has only been fully tested for compatibility on [Railway](https://railway.app/), and has not been fully tested on other platforms.
+
+Reference：https://ponder.sh/docs/production/deploy   
+
+#### Ponder Disadvantages  
+1. When building locally, the PONDER RPC URL 1 variable needs to be entered into the.env.local file to pull Ethereum node data. There is a limite rate limit for using infura or Alchemy's PRC URL 
+2. For factory contracts such as Uniswap V2 and V3, only 10,000 sub-contracts are supported. When a factory contract issues an event to create a subcontract, the numeric type in the event event cannot be array or struct 
+3. The structure and syntax of developing subgraph is different from thegraph, and it needs to be re-adapted if the existing subgraph is migrated   
 
 ## Reference
 

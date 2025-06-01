@@ -160,7 +160,7 @@ You are welcome to PR improvements to existing tutorial projects or to create mo
 46. [NFT Floor Perps](https://www.paradigm.xyz/2021/08/floor-perps/) ⬜
 47. [TWAMM: Time-Weighted Average Market Maker](https://www.paradigm.xyz/2021/07/twamm/) ⬜
 48. [ZK Voting](basic/48-ZK-Voting) ⌛
-49. [Account Abstraction](basic/49-aa)  ✅
+49. [Account Abstraction](basic/49-Account-Abstraction)  ✅
 50. [solidity security](basic/50-solidity-security)  ✅
 51. [sniper](https://github.com/Supercycled/cake_sniper.git) ⬜
 52. [Governance](https://github.com/withtally/safeguard)  ⬜
@@ -291,7 +291,7 @@ Item list:
  - [Paradigm-ctf](https://github.com/paradigm-operations/paradigm-ctf-2021)
  - [Smart Contract CTF](https://blockchain-ctf.securityinnovation.com)
 3. Safe development practices
- - [Safety development practice of Solidity](https://github.com/slowmist/Knowledge-Base/blob/master/solidity-security-comprehensive-list-of-known-attack-vectors-and-common-anti-patterns-chinese.md)
+ - [Safety development practice of Solidity](https://github.com/slowmist/Knowledge-Base/blob/master/translations/solidity-security-comprehensive-list-of-known-attack-vectors-and-common-anti-patterns_zh-cn.md)
 4. Integration of learning resources
  - [Awesome Blockchain Security](https://github.com/xxxeyJ/Awesome-Blockchain-Security)
  - [Immunefi ](https://immunefi.com/learn/)

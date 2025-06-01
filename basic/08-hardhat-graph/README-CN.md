@@ -6,7 +6,7 @@
 
 ## 流程概述
 
-- 在 Goerli 部署一个合约，并调用触发事件。
+- 在 Optimism 部署一个合约，并调用触发事件。
 - 创建定义数据索引的 Subgraph。
 - 部署 Subgraph 到 TheGraph，实现数据索引。
 - 在前端 DApp 中查询索引数据。
@@ -61,191 +61,12 @@ TheGraph 中定义如何为数据建立索引，称为 Subgraph，它包含三�
 
    输入你的项目名称(例如 TEST01)，以下称之为 `<SUBGRAPH_NAME>`，点击 continue 按钮，之后会跳转到 subgraph 的项目主页
 
-   注：最新版的 Graph CLI 仅支持在 mainnet 和 goerli 上部署，若要在其他网络上使用，需要使用 Github 账户登录后在 Hosted Service 上创建和部署
 
 5. 开发和部署 subgraph
 
-   先使用 yarn 在全局安装 Graph CLI
+  参考 [subgraphs-quick-start](https://thegraph.com/docs/en/subgraphs/quick-start/) 初始化、部署 subgraph 项目。
+  其中需要注意的是，在 Initial Subgraph 项目的时候，需要选择真实的区块链网络 ( 如 Optimism )，并输入真实的 Contract address
 
-   ```bash
-   yarn global add @graphprotocol/graph-cli
-   ```
-
-6. 初始化配置:
-
-   ```bash
-   graph init --studio <SUBGRAPH_NAME>
-   ```
-
-   若使用 Hosted Service，则初始化命令如下：
-
-   ```bash
-   graph init --product hosted-service <GITHUB_USER>/<SUBGRAPH NAME>
-   ```
-
-  - Protocol 选择ethereum
-   - 在 "Subgraph slug" 和 "Directory to create the subgraph" 直接回车即可
-   - Ethereum network 这里选择 sepolia
-   - "Contract address" 这里输入在步骤 3 中部署合约时生成的合约地址
-   - 上面执行到 "fetch ABI from Etherscan" 时会报执行失败，然后出现 "ABI file (path)" 字样，提示输入本机中 abi 的文件路径，这里我们输入 SimpleToken.json 所在的路径即可(`./abis/SimpleToken.json`)
-   。如果已经成功执行 07-hardhat , 同时在hardhat.config.js 里配置了ethescan,此处执行会通过
-   -"fetch Start Block"执行失败后，retry输入n,“Start Block”，“Contract Name”默认回车。 “Add another contract?” 输入n
-   - 如果 yarn install 失败(例如网络错误)，可以进入新生成的项目目录，手动安装 npm 依赖
-
-7. 修改定义模式
-
-   - 两个文件的修改范例在 `./scripts/schema.graphql` 和 `./scripts/mapping.ts`
-
-   - `<SUBGRAPH_NAME>/schema.graphql` 修改文件内容如下
-
-     ```graphql
-     type TransferEntity @entity {
-       id: ID!
-       from: Bytes! # address
-       to: Bytes! # address
-       value: BigInt!
-     }
-
-     type ApprovalEntity @entity {
-       id: ID!
-       owner: Bytes! # address
-       spender: Bytes! # address
-       value: BigInt!
-     }
-     ```
-
-   - `<SUBGRAPH_NAME>/src/mapping.ts` 修改文件内容如下
-
-     ```ts
-     import { BigInt } from '@graphprotocol/graph-ts';
-     import { SimpleToken, Transfer, Approval } from '../generated/SimpleToken/SimpleToken';
-     import { TransferEntity, ApprovalEntity } from '../generated/schema';
-
-     export function handleTransfer(event: Transfer): void {
-       // Entities can be loaded from the store using a string ID; this ID
-       // needs to be unique across all entities of the same type
-       let entity = TransferEntity.load(event.transaction.from.toHex());
-
-       // Entities only exist after they have been saved to the store;
-       // `null` checks allow to create entities on demand
-       if (entity == null) {
-         entity = new TransferEntity(event.transaction.from.toHex());
-       }
-
-       // BigInt and BigDecimal math are supported
-       entity.value = event.params.value;
-
-       // Entity fields can be set based on event parameters
-       entity.from = event.params.from;
-       entity.to = event.params.to;
-
-       // Entities can be written to the store with `.save()`
-       entity.save();
-
-       // Note: If a handler doesn't require existing field values, it is faster
-       // _not_ to load the entity from the store. Instead, create it fresh with
-       // `new Entity(...)`, set the fields that should be updated and save the
-       // entity back to the store. Fields that were not set or unset remain
-       // unchanged, allowing for partial updates to be applied.
-
-       // It is also possible to access smart contracts from mappings. For
-       // example, the contract that has emitted the event can be connected to
-       // with:
-       //
-       // let contract = Contract.bind(event.address)
-       //
-       // The following functions can then be called on this contract to access
-       // state variables and other data:
-       //
-       // - contract.approve(...)
-       // - contract.totalSupply(...)
-       // - contract.transferFrom(...)
-       // - contract.increaseAllowance(...)
-       // - contract.balanceOf(...)
-       // - contract.decreaseAllowance(...)
-       // - contract.transfer(...)
-       // - contract.allowance(...)
-     }
-
-     export function handleApproval(event: Approval): void {
-       // Entities can be loaded from the store using a string ID; this ID
-       // needs to be unique across all entities of the same type
-       let entity = ApprovalEntity.load(event.transaction.from.toHex());
-
-       // Entities only exist after they have been saved to the store;
-       // `null` checks allow to create entities on demand
-       if (entity == null) {
-         entity = new ApprovalEntity(event.transaction.from.toHex());
-       }
-
-       // BigInt and BigDecimal math are supported
-       entity.value = event.params.value;
-
-       // Entity fields can be set based on event parameters
-       entity.owner = event.params.owner;
-       entity.spender = event.params.spender;
-
-       // Entities can be written to the store with `.save()`
-       entity.save();
-     }
-     ```
-
-8. 修改实体名字
-
-   - 进入 graphtest 目录
-   - 修改 subgraph.yaml 中 entities 定义如下
-
-   ```yaml
-   ---
-   entities:
-     - TransferEntity
-     - ApprovalEntity
-   ```
-
-9. 授权和部署 Subgraph
-
-   首先获取你的 `<DEPLOY KEY>`，在你的 subgraph 项目主页可以找到：
-   <center><img src="https://github.com/Dapp-Learning-DAO/Dapp-Learning-Arsenal/blob/main/images/basic/08-hardhat-graph/auth_deploy_key.png?raw=true" /></center>
-
-   - 授权
-
-     ```bash
-     graph auth --studio <DEPLOY KEY>
-
-     #注意需要按截图所示点击copy key按钮，并替换<DEPLOY KEY> , 不要直接copy 官网右侧的代码，因为key不全
-     ```
-
-     若使用 Hosted Service，则初始化命令如下：
-
-     ```bash
-     graph auth --product hosted-service <ACCESS_TOKEN>
-     ```
-
-   - 进入 subgraph 的本地目录
-
-     ```bash
-     cd ./<SUBGRAPH_NAME>
-     ```
-
-   - BUILD SUBGRAPH
-
-     ```bash
-     graph codegen && graph build
-     ```
-
-   - DEPLOY SUBGRAPH
-
-     ```bash
-     graph deploy --studio <SUBGRAPH_NAME>
-     ```
-
-     若使用 Hosted Service，则初始化命令如下：
-
-     ```bash
-     graph deploy --product hosted-service <GITHUB_USER>/<SUBGRAPH NAME>
-     ```
-
-     - 这里必须输入 `Version Label` , 比如`0.0.1`， 否则会报错提示 `You must provide a version label.`
 
 ## 检验 subgraph 是否部署成功
 
@@ -395,6 +216,75 @@ subgraph 定义了你希望通过 GraphQL API 提供的数据、数据源和数�
    AssemblyScript 映射允许您使用 schema 中定义的实体类型保存要索引的数据。Graph CLI 还使用 schema 与智能合约的 ABI 的组合生成 AssemblyScript 类型。
 4. 通过@derivedFrom 建立关系  
    通过@derivedFrom 字段在实体上定义反向查询，这样就在实体上创建了一个虚拟字段，使它可以被查询，但不能通过映射 API 手动设置。实际上，这是从另一个实体上定义的关系中衍生出来的。这样的关系，对存储关系的两者意义不大，如果只存储一方而派生另一方，则索引和查询性能都会更好。
+
+## Thegraph 的同类产品  
+除了 Thegraph, 还有其他同类的产品，以便我们可以根据产品特点，费用等选择最优的产品。  
+
+### Alchemy  
+Alchemy 也提供了 Subgraph 功能，用户可以轻松的从 Thegraph 上把 Subgraph 迁移到 Alchemy 上来。 
+
+- 部署  
+部署流程和 thegraph 流程一样，编写完 ts 代码后进行 codegen、build，最后deploy 的时候需要输入 deploy-key 这个参数，这个 key 需要在 Dashboard 界面获取
+
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/Alchemy_Subgraph.jpg?raw=true" /></center>
+
+参考: https://docs.alchemy.com/reference/subgraphs-quickstart   
+
+
+2. Alchemy Subgraph Pricing  
+默认情况下，使用的是 Free Plan， 对于开发者自己使用是足够的，当用于项目时，需要升级 Plan，解锁更都的查询次数  
+
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/Alchemy_Pricing.jpg?raw=true" /></center>        
+
+
+3. Thegraph Pricing    
+Growth Plan 一个月 $49, 有 100,0000 的查询次数，平均 $0.000049/次，而 thegraph 查询 100,0000 次，需要约 186 GRT,  GRT 按照 $0.2 计算的话，thegraph 平均 $0.000037/次  
+
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/Thegraph_Pricing.jpg?raw=true" /></center>
+
+参考：https://www.alchemy.com/pricing
+
+
+### Envio  
+1. 本地构建  
+使用 `envio init` 初始化项目目录，然后使用 `envio dev` 启动本地 Indexer。
+envio 本地 indexer 启动很快，启动后便可通过 [http://localhost:8080/](http://localhost:8080/console) 进行访问  
+
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/envio_start.jpg?raw=true" /></center>   
+
+2. 部署 Host Service   
+把使用 envio init 初始化后的项目上传到 github, 然后对授权这个 repo 的访问权限个 envio，那么提交 commit 后，envio 就会自动进行部署  
+
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/envio_init.jpg?raw=true" /></center>  
+
+3. 部署成功
+部署成功后，即可在 envio 的 Host Service 处查看访问   
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/envio_dashboard.jpg?raw=true" /></center>  
+
+参考：https://docs.envio.dev/docs/HyperIndex/hosted-service-deployment
+
+
+#### Envio 优势  
+- 本地构建速度很快  
+- Host Service 目前是免费使用  
+
+### Ponder  
+1. 本地构建  
+Ponder 也可以本地进行构建，但是他需要使用 Ethereum RPC 到节点去获取数据，类似 Alchemy 的 subgraph ，受限于 Ethereum RPC 节点的访问频率。官方网站推荐使用 Alchemy 的 RPC， 但根据上面介绍的，Alchemy 的 RPC 有访问限制  
+
+<center><img src="https://github.com/yingjingyang/Imgs-for-tasks-01/blob/main/basic-task/task-08/ponder_build.jpg?raw=true" /></center> 
+
+2. Host Service 构建  
+目前 ponder 只在 [Railway](https://railway.app/) 上进行了全面的测试兼容，对于其他的平台，没有进行完整的测试。
+
+参考：https://ponder.sh/docs/production/deploy   
+
+#### Ponder 不足  
+1. 本地构建的时候，在 .env.local 文件中需要输入 `PONDER_RPC_URL_1` 变量，用以拉取 Ethereum node 数据。这里使用 infura 或是 Alchemy 的 PRC_URL 都是有 limite_rate 限制的  
+2. 对于 Uniswap V2, V3 这类的 factory 合约，只支持监听 10,000 个子合约。同时当工厂合约发出事件创建子合约的时候，event 事件里面的数值类型不能是 array 或是 struct
+3. 开发 subgraph 的结构与语法不同与 thegraph, 对于已有 subgraph 进行迁移的话，需要重新进行适配  
+
+
 
 ## 参考文档
 
